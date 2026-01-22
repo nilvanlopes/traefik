@@ -1,0 +1,3 @@
+# Arquivos de ambiente e certificados
+.env
+infra/traefik/acme/acme.json

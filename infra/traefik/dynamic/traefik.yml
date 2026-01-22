@@ -1,0 +1,39 @@
+http:
+  routers:
+    traefik:
+      entryPoints:
+        - websecure
+      rule: Host(`traefik.${TRAEFIK_DOMAIN}`)
+      middlewares:
+        - crowdsec@file
+        - authentik-traefik-middleware@file
+      service: api@internal
+      tls:
+        certResolver: cloudflare
+
+    traefik-auth:
+      entryPoints:
+        - websecure
+      rule: Host(`traefik.${TRAEFIK_DOMAIN}`) && PathPrefix(`/outpost.goauthentik.io/`)
+      service: authentik-traefik-outpost
+      tls:
+        certResolver: cloudflare
+
+  middlewares:
+    authentik-traefik-middleware:
+      forwardAuth:
+        address: http://ak-outpost-traefik-outpost:9000/outpost.goauthentik.io/auth/traefik
+        trustForwardHeader: true
+        authResponseHeaders:
+          - X-authentik-username
+          - X-authentik-groups
+          - X-authentik-email
+          - X-authentik-name
+          - X-authentik-uid
+          - X-authentik-jwt
+
+  services:
+    authentik-traefik-outpost:
+      loadBalancer:
+        servers:
+          - url: http://ak-outpost-traefik-outpost:9000/outpost.goauthentik.io
