@@ -34,6 +34,7 @@ services:
     environment:
       - CF_DNS_API_TOKEN_FILE=/run/secrets/cloudflare_api_token
       - ACME_EMAIL=${ACME_EMAIL}
+      - TRAEFIK_DOMAIN=${TRAEFIK_DOMAIN}
     volumes:
       - ./infra/traefik/traefik.yml:/etc/traefik/traefik.yml:ro
       - ./infra/traefik/acme/acme.json:/etc/traefik/acme/acme.json

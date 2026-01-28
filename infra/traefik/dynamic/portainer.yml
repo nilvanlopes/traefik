@@ -3,7 +3,7 @@ http:
     portainer:
       entryPoints:
         - websecure
-      rule: "Host(`portainer.${TRAEFIK_DOMAIN}`)"
+      rule: "Host(`portainer.{{ env "TRAEFIK_DOMAIN" }}`)"
       middlewares:
         - crowdsec@file
         - authentik-portainer-middleware@file
@@ -15,7 +15,7 @@ http:
     portainer-auth:
       entryPoints:
         - websecure
-      rule: Host(`portainer.${TRAEFIK_DOMAIN}`) && PathPrefix(`/outpost.goauthentik.io/`)
+      rule: Host(`portainer.{{ env "TRAEFIK_DOMAIN" }}`) && PathPrefix(`/outpost.goauthentik.io/`)
       service: authentik-portainer-outpost
       tls:
         certResolver: cloudflare

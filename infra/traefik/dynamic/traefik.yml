@@ -3,7 +3,7 @@ http:
     traefik:
       entryPoints:
         - websecure
-      rule: Host(`traefik.${TRAEFIK_DOMAIN}`)
+      rule: Host(`traefik.{{ env "TRAEFIK_DOMAIN" }}`)
       middlewares:
         - crowdsec@file
         - authentik-traefik-middleware@file
@@ -14,7 +14,7 @@ http:
     traefik-auth:
       entryPoints:
         - websecure
-      rule: Host(`traefik.${TRAEFIK_DOMAIN}`) && PathPrefix(`/outpost.goauthentik.io/`)
+      rule: Host(`traefik.{{ env "TRAEFIK_DOMAIN" }}`) && PathPrefix(`/outpost.goauthentik.io/`)
       service: authentik-traefik-outpost
       tls:
         certResolver: cloudflare
