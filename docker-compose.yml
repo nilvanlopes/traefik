@@ -30,14 +30,16 @@ services:
   traefik:
     image: traefik:latest
     command:
-      - "--configFile=/etc/traefik/traefik.yml"
+      - "sh"
+      - "-c"
+      - "mkdir -p /etc/traefik/acme && touch /etc/traefik/acme/acme.json && chmod 600 /etc/traefik/acme/acme.json && exec traefik --configFile=/etc/traefik/traefik.yml"
     environment:
       - CF_DNS_API_TOKEN_FILE=/run/secrets/cloudflare_api_token
       - ACME_EMAIL=${ACME_EMAIL}
       - TRAEFIK_DOMAIN=${TRAEFIK_DOMAIN}
     volumes:
       - ./infra/traefik/traefik.yml:/etc/traefik/traefik.yml:ro
-      - ./infra/traefik/acme/acme.json:/etc/traefik/acme/acme.json
+      - traefik-acme:/etc/traefik/acme
       - ./infra/traefik/dynamic:/etc/traefik/dynamic:ro
       - traefik-logs:/var/log/traefik
     secrets:
@@ -78,5 +80,7 @@ secrets:
   cloudflare_api_token:
     external: true
 volumes:
+  traefik-acme:
+    driver: local
   traefik-logs:
     driver: local
