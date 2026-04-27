@@ -1,0 +1,42 @@
+http:
+  routers:
+    foundry:
+      entryPoints:
+        - websecure
+      rule: "Host(`foundry.nilvanlopes.com`)"
+      middlewares:
+        - crowdsec@file
+        - authentik-foundry-middleware@file
+      service: foundry
+      tls:
+        certResolver: cloudflare
+
+    foundry-auth:
+      entryPoints:
+        - websecure
+      rule: Host(`foundry.nilvanlopes.com`) && PathPrefix(`/outpost.goauthentik.io/`)
+      service: authentik-foundry-outpost
+      tls:
+        certResolver: cloudflare
+
+  middlewares:
+    authentik-foundry-middleware:
+      forwardAuth:
+        address: "http://authentik-outpost-foundry_proxy:9000/outpost.goauthentik.io/auth/traefik"
+        trustForwardHeader: true
+        authResponseHeaders:
+          - X-authentik-username
+          - X-authentik-groups
+          - X-authentik-email
+          - X-authentik-name
+          - X-authentik-uid
+
+  services:
+    authentik-foundry-outpost:
+      loadBalancer:
+        servers:
+          - url: http://authentik-outpost-foundry_proxy:9000/outpost.goauthentik.io
+    foundry:
+      loadBalancer:
+        servers:
+          - url: "http://foundry_foundry:30000"
