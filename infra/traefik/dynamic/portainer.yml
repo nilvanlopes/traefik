@@ -3,19 +3,18 @@ http:
     portainer:
       entryPoints:
         - websecure
-      rule: "Host(`portainer.{{ env "TRAEFIK_DOMAIN" }}`)"
+      rule: "Host(`portainer.nilvanlopes.com`)"
       middlewares:
         - crowdsec@file
         - authentik-portainer-middleware@file
       service: portainer
       tls:
         certResolver: cloudflare
-  
-  
+
     portainer-auth:
       entryPoints:
         - websecure
-      rule: Host(`portainer.{{ env "TRAEFIK_DOMAIN" }}`) && PathPrefix(`/outpost.goauthentik.io/`)
+      rule: Host(`portainer.nilvanlopes.com`) && PathPrefix(`/outpost.goauthentik.io/`)
       service: authentik-portainer-outpost
       tls:
         certResolver: cloudflare
@@ -23,7 +22,7 @@ http:
   middlewares:
     authentik-portainer-middleware:
       forwardAuth:
-        address: "http://ak-outpost-portainer-outpost:9000/outpost.goauthentik.io/auth/traefik"
+        address: "http://authentik-outpost-portainer_proxy:9000/outpost.goauthentik.io/auth/traefik"
         trustForwardHeader: true
         authResponseHeaders:
           - X-authentik-username
@@ -36,7 +35,7 @@ http:
     authentik-portainer-outpost:
       loadBalancer:
         servers:
-          - url: http://ak-outpost-portainer-outpost:9000/outpost.goauthentik.io
+          - url: http://authentik-outpost-portainer_proxy:9000/outpost.goauthentik.io
     portainer:
       loadBalancer:
         servers:
