@@ -1,0 +1,13 @@
+http:
+  routers:
+    waha-local:
+      entryPoints:
+        - localweb
+      rule: "Host(`waha.localnetwork`)"
+      service: waha-local
+
+  services:
+    waha-local:
+      loadBalancer:
+        servers:
+          - url: "http://waha:3000"

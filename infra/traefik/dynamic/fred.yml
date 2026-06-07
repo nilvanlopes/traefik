@@ -1,0 +1,13 @@
+http:
+  routers:
+    fred-local:
+      entryPoints:
+        - localweb
+      rule: "Host(`fred.localnetwork`)"
+      service: fred-local
+
+  services:
+    fred-local:
+      loadBalancer:
+        servers:
+          - url: "http://fred-api:8000"

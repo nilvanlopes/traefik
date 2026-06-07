@@ -42,6 +42,8 @@ services:
       - traefik-acme:/etc/traefik/acme
       - ./infra/traefik/dynamic:/etc/traefik/dynamic:ro
       - traefik-logs:/var/log/traefik
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     secrets:
       - cloudflare_api_token
     networks:
@@ -49,6 +51,7 @@ services:
       traefik-public:
         aliases:
           - traefik.${TRAEFIK_DOMAIN}
+      traefik-local:
     deploy:
       mode: global
       restart_policy:
@@ -66,11 +69,17 @@ services:
         published: 443
         protocol: tcp
         mode: ingress
+      - target: 8181
+        published: 8181
+        protocol: tcp
+        mode: ingress
     cap_drop:
       - ALL
 
 networks:
   traefik-public:
+    external: true
+  traefik-local:
     external: true
   socket_proxy:
     driver: overlay

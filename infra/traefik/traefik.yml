@@ -31,6 +31,9 @@ entryPoints:
         - "172.64.0.0/13"
         - "131.0.72.0/22"
 
+  localweb:
+    address: ":8181"
+
 providers:
   swarm:
     endpoint: "tcp://traefik_socket_proxy:2375"

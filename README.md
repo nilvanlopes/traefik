@@ -67,6 +67,12 @@ Acesso ao dashboard
   http://localhost:8080/dashboard/
 - Observação: a porta 8080 foi publicada em mode: host. Garanta regras de firewall/ACLs para limitar acesso.
 
+Serviços locais
+- O host local `fred.localnetwork` está exposto em `http://fred.localnetwork:8181` via Traefik, sem Cloudflare Tunnel.
+- O backend desse host aponta para a API do Fred via a rede `traefik-local`, usando o alias `fred-api`.
+- O host local `waha.localnetwork` expõe o dashboard do WAHA em `http://waha.localnetwork:8181` pela mesma rede `traefik-local`, sem porta publicada no host.
+- Para acessar no Windows/WSL, adicione `fred.localnetwork` e `waha.localnetwork` no `hosts` local apontando para o IP da máquina que publica o Traefik.
+
 Notas de segurança e recomendações
 - Tokens (Cloudflare API Token) devem ser gerenciados via Docker Secrets e nunca commitados.
 - Use um e‑mail de função (ops@, infra@) para ACME em ambientes de produção; e‑mails pessoais funcionam, mas perdem rastreabilidade.
