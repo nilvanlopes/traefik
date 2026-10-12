@@ -28,7 +28,7 @@ services:
     cap_drop:
       - ALL
   traefik:
-    image: traefik:latest@sha256:ef751c695afd26e2be41009047f651153dc1e61ace03e6d13f299d8c4be842b8
+    image: traefik:latest@sha256:575fa15b135078fe5e50aa847987d96dbddd7b093c172429618404df73f3fa7c
     command:
       - "sh"
       - "-c"
