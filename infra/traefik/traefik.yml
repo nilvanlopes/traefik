@@ -1,15 +1,9 @@
 entryPoints:
-  web:
-    address: ":80"
-    http:
-      redirections:
-        entryPoint:
-          to: websecure
-          scheme: https
-
   websecure:
     address: ":443"
     http:
+      middlewares:
+        - tunnel-only@file
       tls:
         certResolver: cloudflare
     forwardedHeaders:
@@ -31,8 +25,14 @@ entryPoints:
         - "172.64.0.0/13"
         - "131.0.72.0/22"
 
-  localweb:
-    address: ":8181"
+  traefik_local:
+    address: "192.168.10.91:80"
+
+  dns_tcp:
+    address: "192.168.10.91:53/tcp"
+
+  dns_udp:
+    address: "192.168.10.91:53/udp"
 
 providers:
   swarm:

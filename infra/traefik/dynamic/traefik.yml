@@ -6,6 +6,7 @@ http:
       rule: Host(`traefik.nilvanlopes.com`)
       middlewares:
         - crowdsec@file
+        - traefik-dashboard-root@file
         - authentik-traefik-middleware@file
       service: api@internal
       tls:
@@ -20,6 +21,11 @@ http:
         certResolver: cloudflare
 
   middlewares:
+    traefik-dashboard-root:
+      redirectRegex:
+        regex: "^https?://traefik\\.nilvanlopes\\.com/?$"
+        replacement: "https://traefik.nilvanlopes.com/dashboard/"
+        permanent: false
     authentik-traefik-middleware:
       forwardAuth:
         address: http://authentik-outpost-traefik_proxy:9000/outpost.goauthentik.io/auth/traefik

@@ -1,0 +1,77 @@
+http:
+  middlewares:
+    traefik-local-lan-only:
+      ipAllowList:
+        sourceRange:
+          - "192.168.10.0/24"
+    traefik-local-waha-root:
+      redirectRegex:
+        regex: "^https?://waha\\.localnetwork/?$"
+        replacement: "http://waha.localnetwork/dashboard/"
+        permanent: false
+
+  routers:
+    traefik-local-adguard:
+      entryPoints:
+        - traefik_local
+      rule: "Host(`adguard.localnetwork`)"
+      middlewares:
+        - traefik-local-lan-only
+        - crowdsec@file
+      service: traefik-local-adguard
+    traefik-local-fred:
+      entryPoints:
+        - traefik_local
+      rule: "Host(`fred.localnetwork`)"
+      middlewares:
+        - traefik-local-lan-only
+        - crowdsec@file
+      service: traefik-local-fred
+    traefik-local-waha:
+      entryPoints:
+        - traefik_local
+      rule: "Host(`waha.localnetwork`)"
+      middlewares:
+        - traefik-local-lan-only
+        - crowdsec@file
+        - traefik-local-waha-root
+      service: traefik-local-waha
+
+  services:
+    traefik-local-adguard:
+      loadBalancer:
+        servers:
+          - url: "http://adguardhome:3000"
+    traefik-local-fred:
+      loadBalancer:
+        servers:
+          - url: "http://fred-api:8000"
+    traefik-local-waha:
+      loadBalancer:
+        servers:
+          - url: "http://waha:3000"
+
+tcp:
+  routers:
+    traefik-local-dns:
+      entryPoints:
+        - dns_tcp
+      rule: "HostSNI(`*`)"
+      service: traefik-local-adguard-dns-tcp
+  services:
+    traefik-local-adguard-dns-tcp:
+      loadBalancer:
+        servers:
+          - address: "adguardhome:53"
+
+udp:
+  routers:
+    traefik-local-dns:
+      entryPoints:
+        - dns_udp
+      service: traefik-local-adguard-dns-udp
+  services:
+    traefik-local-adguard-dns-udp:
+      loadBalancer:
+        servers:
+          - address: "adguardhome:53"

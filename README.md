@@ -1,95 +1,57 @@
-# Traefik (Docker Swarm) — Infraestrutura
+# Traefik no Docker Swarm
 
-Este repositório contém a configuração para executar o Traefik (edge reverse proxy / ingress) em um cluster Docker Swarm. A configuração usa:
-- Traefik v (traefik:latest)
-- Resolvedor ACME via Cloudflare DNS (DNS challenge)
-- Deployment em modo `global` (uma instância por nó)
-- Dashboard disponível no manager via `http://localhost:8080/dashboard/`
-- Cloudflare API Token fornecido como Docker Secret (cloudflare_api_token)
+A stack `traefik` executa um único Traefik no nó `pyuserver`. O mesmo processo
+atende os serviços públicos pelo Cloudflare Tunnel e os serviços locais pela
+entrada `traefik_local`, no endereço `192.168.10.91`.
 
-Estrutura do projeto
-```txt
-infra/
-├── traefik/
-│   ├── traefik.yaml       # configuração estática do Traefik
-│   ├── dynamic/           # (opcional) configs dinâmicas (middlewares, routers, tls)
-│   └── acme/acme.json     # arquivo ACME (deve ser criado antes do deploy)
-docker-compose.yml         # stack do Swarm (na raiz do projeto)
-.env                       # variáveis de ambiente(junto com o compose)
+## Entradas e redes
+
+- `websecure`: HTTPS na porta 443, com middleware `tunnel-only` permitindo
+  conexões da rede Docker `traefik-public` (`10.0.1.0/24`). O Tunnel acessa
+  `https://traefik.${TRAEFIK_DOMAIN}:443` por essa rede, inclusive quando o
+  navegador entrou na Cloudflare por HTTP. A descoberta Swarm usa o socket proxy.
+- `traefik_local`: HTTP em `192.168.10.91:80`, para `adguard.localnetwork`,
+  `fred.localnetwork` e `waha.localnetwork`. A raiz do WAHA encaminha a `/dashboard/`.
+- `dns_tcp` e `dns_udp`: DNS em `192.168.10.91:53`, encaminhado ao AdGuard.
+
+Não há publicação de portas no host `.90`, porta 8181 nem segunda stack de
+proxy local. Os routers locais só estão associados à entrada `traefik_local`;
+eles mantêm os logins nativos e aplicam a allowlist LAN e CrowdSec.
+
+O Traefik carrega diretamente `infra/traefik/traefik.yml`, sem template ou
+descoberta de IP. A porta 80 atende exclusivamente a entrada local `.91:80`;
+não há entrypoint público `web`. Se mudar a sub-rede `traefik-public`, atualize
+a allowlist `tunnel-only`. Ela verifica a origem da conexão, sem usar
+`X-Forwarded-For` para autorizar o acesso.
+
+O serviço permanece global, mas a restrição `node.hostname == pyuserver`
+permite exatamente uma tarefa. DNSRR evita alocar outro IP LAN para uma VIP;
+a atualização stop-first libera `.91` antes de iniciar a tarefa substituta.
+
+## Deploy e operação
+
+Na raiz do repositório:
+
+```bash
+make deploy-adguard
+make deploy-traefik
+make logs-traefik
+docker service ps traefik_traefik
 ```
 
-Como o projeto funciona (resumo técnico)
-- Traefik lê a configuração estática (traefik.yaml) e o provider swarm.
-- Para emitir certificados via Let's Encrypt usa DNS challenge com Cloudflare; o token é lido via Docker Secret dentro do container.
-- O serviço é executado em modo global: cada nó executa uma instância do Traefik. As portas 80/443/8080 estão publicadas em modo host.
-- O dashboard é servido no entryPoint `traefik` (porta 8080) e está publicado em host para permitir acesso via `localhost` no manager.
+O deploy prepara as redes `traefik-public`, `traefik-local` e
+`traefik_local_lan`. Preencha `traefik/.env` e mantenha o secret
+`cloudflare_api_token` existente. ACME e logs continuam nos volumes persistentes.
+O dashboard público permanece em `https://traefik.${TRAEFIK_DOMAIN}/dashboard/`,
+protegido pelo Authentik e CrowdSec.
 
-Pré‑requisitos
-- Docker Engine instalado e Swarm inicializado (no manager): docker swarm init
-- Ter criado o Docker Secret com o token Cloudflare no manager:
-   ```bash
-   read -sp "Digite seu Cloudflare API Token: " CF_TOKEN
-   echo "$CF_TOKEN" | docker secret create cloudflare_api_token -
-   unset CF_TOKEN
-   ```
+## Windows e IPv6
 
-- Ter criado o arquivo acme.json com permissões seguras:
-  ```bash
-  mkdir -p infra/traefik/acme
-  touch infra/traefik/acme/acme.json
-  chmod 600 infra/traefik/acme/acme.json
-  ```
-- Verificar que os caminhos relativos do docker-compose.yml apontam corretamente para ./infra/traefik/...
+Configure `192.168.10.91` como DNS e mantenha IPv6 habilitado. As instruções
+NRPT para `.localnetwork` estão no README da raiz.
 
-Passos para colocar em funcionamento
-1) Prepare acme.json e secret (se ainda não feitos)
-   ```bash
-   mkdir -p infra/traefik/acme
-   touch infra/traefik/acme/acme.json
-   chmod 600 infra/traefik/acme/acme.json
-   ```
-
-2) Ajuste traefik.yaml
-   - Substitua o campo `email` do resolver ACME pelo e‑mail de contato 
-
-3) Deploy do stack (executar no diretório raiz onde está docker-compose.yml)
-   `docker stack deploy -c docker-compose.yml traefik`
-
-4) Verificar se o serviço iniciou corretamente
-   ```bash
-   docker stack services traefik
-   docker service ps traefik_traefik
-   docker logs <TRAEFIK_CONTAINER_ID>   # ver logs para erros ACME/Cloudflare
-   ```
-
-Acesso ao dashboard
-- No manager (host onde está o Swarm manager) abra no navegador:
-  http://localhost:8080/dashboard/
-- Observação: a porta 8080 foi publicada em mode: host. Garanta regras de firewall/ACLs para limitar acesso.
-
-Serviços locais
-- O host local `fred.localnetwork` está exposto em `http://fred.localnetwork:8181` via Traefik, sem Cloudflare Tunnel.
-- O backend desse host aponta para a API do Fred via a rede `traefik-local`, usando o alias `fred-api`.
-- O host local `waha.localnetwork` expõe o dashboard do WAHA em `http://waha.localnetwork:8181` pela mesma rede `traefik-local`, sem porta publicada no host.
-- Para acessar no Windows/WSL, adicione `fred.localnetwork` e `waha.localnetwork` no `hosts` local apontando para o IP da máquina que publica o Traefik.
-
-Notas de segurança e recomendações
-- Tokens (Cloudflare API Token) devem ser gerenciados via Docker Secrets e nunca commitados.
-- Use um e‑mail de função (ops@, infra@) para ACME em ambientes de produção; e‑mails pessoais funcionam, mas perdem rastreabilidade.
-- acme.json deve ter permissão 600 e ser persistido (volume). Evite múltiplas instâncias concorrendo sobre um arquivo local não compartilhado.
-- Publicar 8080 em todos os nós (mode: host + deploy: global) expõe o dashboard em cada nó. Se quiser que apenas o manager exponha o dashboard, ajuste placement/constraints no compose para limitar execução.
-
-Troubleshooting rápido
-- ACME falha: verifique token Cloudflare e permissões, zona correta no token.
-- Sem certificados: verifique logs do Traefik e checar se acme.json está gravando alterações.
-- Service não cria: verifique constraints e se o nó tem recursos.
-
-Comandos úteis
-- Listar secrets: docker secret ls
-- Ver serviços do stack: docker stack services traefik
-- Ver containers do serviço: docker service ps traefik_traefik
-- Acessar shell de um container Traefik: docker exec -it <CONTAINER_ID> sh
-
-Contato / manutenção
-- Mantenha o token rotacionado periodicamente.
-- Atualize a imagem Traefik quando estabilidade for validada em ambiente de teste.
+O Makefile prepara a rede IPvlan `traefik_local_lan`, ligada a `bond0`, com
+alocação exclusiva de `.91`. Reserve esse endereço fora do DHCP do roteador.
+O Linux isola esse IP do próprio host `.90`; testes de cliente devem ser feitos
+pela LAN. Os logs DNS do AdGuard mostram o endereço overlay do Traefik; os
+logs HTTP mantêm o IP do cliente LAN.
