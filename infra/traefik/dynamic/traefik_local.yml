@@ -36,6 +36,14 @@ http:
         - crowdsec@file
         - traefik-local-waha-root
       service: traefik-local-waha
+    traefik-local-stremio:
+      entryPoints:
+        - traefik_local
+      rule: "Host(`stremio.localnetwork`)"
+      middlewares:
+        - traefik-local-lan-only
+        - crowdsec@file
+      service: traefik-local-stremio
 
   services:
     traefik-local-adguard:
@@ -50,6 +58,10 @@ http:
       loadBalancer:
         servers:
           - url: "http://waha:3000"
+    traefik-local-stremio:
+      loadBalancer:
+        servers:
+          - url: "http://stremio-web:8080"
 
 tcp:
   routers:
