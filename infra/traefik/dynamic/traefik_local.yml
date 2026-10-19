@@ -44,6 +44,14 @@ http:
         - traefik-local-lan-only
         - crowdsec@file
       service: traefik-local-stremio
+    traefik-local-fichasrpg-dev:
+      entryPoints:
+        - traefik_local
+      rule: "Host(`fichasrpg.localnetwork`)"
+      middlewares:
+        - traefik-local-lan-only
+        - crowdsec@file
+      service: traefik-local-fichasrpg-dev
 
   services:
     traefik-local-adguard:
@@ -62,6 +70,10 @@ http:
       loadBalancer:
         servers:
           - url: "http://stremio-web:8080"
+    traefik-local-fichasrpg-dev:
+      loadBalancer:
+        servers:
+          - url: "http://fichasrpg-dev:5173"
 
 tcp:
   routers:
