@@ -1,0 +1,37 @@
+http:
+  routers:
+    meu-site:
+      entryPoints: [websecure]
+      rule: Host(`meusite.nilvanlopes.com`)
+      middlewares: [crowdsec@file, authentik-meu-site@file]
+      service: meu-site
+      tls:
+        certResolver: cloudflare
+    meu-site-outpost:
+      entryPoints: [websecure]
+      rule: Host(`meusite.nilvanlopes.com`) && PathPrefix(`/outpost.goauthentik.io/`)
+      priority: 200
+      middlewares: [crowdsec@file]
+      service: meu-site-outpost
+      tls:
+        certResolver: cloudflare
+  middlewares:
+    authentik-meu-site:
+      forwardAuth:
+        address: http://authentik-outpost-meu-site_proxy:9000/outpost.goauthentik.io/auth/traefik
+        trustForwardHeader: true
+        authResponseHeaders:
+          - X-authentik-username
+          - X-authentik-groups
+          - X-authentik-email
+          - X-authentik-name
+          - X-authentik-uid
+  services:
+    meu-site:
+      loadBalancer:
+        servers:
+          - url: http://meu-site_web:8080
+    meu-site-outpost:
+      loadBalancer:
+        servers:
+          - url: http://authentik-outpost-meu-site_proxy:9000
