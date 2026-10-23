@@ -1,0 +1,15 @@
+http:
+  routers:
+    traefik-local-mysite:
+      entryPoints:
+        - traefik_local
+      rule: "Host(`mysite.localnetwork`)"
+      middlewares:
+        - traefik-local-lan-only@file
+        - crowdsec@file
+      service: traefik-local-mysite
+  services:
+    traefik-local-mysite:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.10.90:5173"

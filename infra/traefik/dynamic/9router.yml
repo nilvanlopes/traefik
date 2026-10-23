@@ -1,0 +1,16 @@
+http:
+  routers:
+    traefik-local-9router:
+      entryPoints:
+        - traefik_local
+      rule: "Host(`9router.localnetwork`)"
+      middlewares:
+        - traefik-local-lan-only@file
+        - crowdsec@file
+      service: traefik-local-9router
+
+  services:
+    traefik-local-9router:
+      loadBalancer:
+        servers:
+          - url: "http://9router:20128"

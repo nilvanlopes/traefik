@@ -1,0 +1,17 @@
+http:
+  routers:
+    homeassistant:
+      entryPoints:
+        - websecure
+      rule: Host(`homeassistant.nilvanlopes.com`)
+      middlewares:
+        - crowdsec@file
+      service: homeassistant
+      tls:
+        certResolver: cloudflare
+
+  services:
+    homeassistant:
+      loadBalancer:
+        servers:
+          - url: http://homeassistant_homeassistant:8123

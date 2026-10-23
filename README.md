@@ -52,6 +52,9 @@ NRPT para `.localnetwork` estão no README da raiz.
 
 O Makefile prepara a rede IPvlan `traefik_local_lan`, ligada a `bond0`, com
 alocação exclusiva de `.91`. Reserve esse endereço fora do DHCP do roteador.
-O Linux isola esse IP do próprio host `.90`; testes de cliente devem ser feitos
-pela LAN. Os logs DNS do AdGuard mostram o endereço overlay do Traefik; os
-logs HTTP mantêm o IP do cliente LAN.
+O Linux isola esse IP da interface principal do host `.90`. O host acessa
+`.91` pela interface IPvlan `local-lan`, configurada de forma persistente em
+`/etc/systemd/network/`. O domínio `.localnetwork` usa o AdGuard via `.91`.
+Os arquivos e instruções estão em [acesso-localnetwork-host](acesso-localnetwork-host/README.md).
+Os logs DNS do AdGuard mostram o endereço overlay do Traefik; os logs HTTP
+mantêm o IP do cliente LAN.

@@ -1,0 +1,7 @@
+[NetDev]
+Name=local-lan
+Kind=ipvlan
+
+[IPVLAN]
+Mode=L2
+Flags=bridge

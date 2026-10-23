@@ -1,0 +1,6 @@
+[Match]
+OriginalName=local-lan
+
+[Link]
+NamePolicy=keep
+MACAddressPolicy=none
