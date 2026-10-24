@@ -52,6 +52,14 @@ http:
         - traefik-local-lan-only
         - crowdsec@file
       service: traefik-local-fichasrpg-dev
+    traefik-local-meu-site:
+      entryPoints:
+        - traefik_local
+      rule: "Host(`meu-site.localnetwork`) || Host(`mysite.localnetwork`)"
+      middlewares:
+        - traefik-local-lan-only
+        - crowdsec@file
+      service: traefik-local-meu-site
 
   services:
     traefik-local-adguard:
@@ -74,6 +82,10 @@ http:
       loadBalancer:
         servers:
           - url: "http://fichasrpg-dev:5173"
+    traefik-local-meu-site:
+      loadBalancer:
+        servers:
+          - url: "http://meu-site-dev:5173"
 
 tcp:
   routers:
