@@ -51,6 +51,18 @@ http:
       service: authentik@swarm
       tls:
         certResolver: cloudflare
+
+    # Imagens públicas do bucket: somente leitura pelo Tunnel/Traefik.
+    fichasrpg-assets:
+      entryPoints:
+        - websecure
+      rule: Host(`fichasrpg-assets.nilvanlopes.com`) && (Method(`GET`) || Method(`HEAD`))
+      priority: 100
+      middlewares:
+        - crowdsec@file
+      service: fichasrpg-assets
+      tls:
+        certResolver: cloudflare
   services:
     fichasrpg-portal:
       loadBalancer:
@@ -60,6 +72,10 @@ http:
       loadBalancer:
         servers:
           - url: http://authentik-outpost-fichasrpg_proxy:9000
+    fichasrpg-assets:
+      loadBalancer:
+        servers:
+          - url: http://floci-assets-proxy:8080
 
   middlewares:
     fichasrpg-callback-expirado:
