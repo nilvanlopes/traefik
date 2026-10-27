@@ -2,6 +2,19 @@
 http:
   routers:
 
+    # Um callback OAuth expirado deve iniciar um fluxo novo em vez de exibir 400.
+    fichasrpg-sessao-callback:
+      entryPoints:
+        - websecure
+      rule: Host(`fichasrpg.nilvanlopes.com`) && Path(`/outpost.goauthentik.io/callback`)
+      priority: 210
+      middlewares:
+        - crowdsec@file
+        - fichasrpg-callback-expirado
+      service: fichasrpg-outpost
+      tls:
+        certResolver: cloudflare
+
     # Portal, arquivos, cadastro e API. A aplicação valida o acesso aos dados.
     fichasrpg-portal:
       entryPoints:
@@ -47,3 +60,15 @@ http:
       loadBalancer:
         servers:
           - url: http://authentik-outpost-fichasrpg_proxy:9000
+
+  middlewares:
+    fichasrpg-callback-expirado:
+      errors:
+        status:
+          - "400"
+        # O Errors preserva o status original; reescreva como redirect real.
+        statusRewrites:
+          "400": 303
+        service: fichasrpg-portal
+        # O portal protegido inicia /start com um state OAuth novo.
+        query: /fichas
