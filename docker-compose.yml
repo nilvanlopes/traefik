@@ -29,7 +29,7 @@ services:
       - ALL
 
   traefik:
-    image: traefik:latest@sha256:ef751c695afd26e2be41009047f651153dc1e61ace03e6d13f299d8c4be842b8
+    image: traefik:latest@sha256:e9338a01a43389362bdef90afd4ff4a30dd6c0a2e1b0ce00c5e0f52659aa2d9c
     command: ["--configFile=/etc/traefik/traefik.yml"]
     environment:
       CF_DNS_API_TOKEN_FILE: /run/secrets/cloudflare_api_token
