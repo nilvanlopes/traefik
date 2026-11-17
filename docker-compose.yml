@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   socket_proxy:
-    image: tecnativa/docker-socket-proxy@sha256:1f5038b54f06c3e18422902cf00ba21803d1c97805aae032e5e6673d532d3459
+    image: tecnativa/docker-socket-proxy@sha256:fd989c12c74edb8424f53f31a2054459f286967c93e113e91ea95432f066493b
     environment:
       # Permissões mínimas para o Traefik
       CONTAINERS: 1
