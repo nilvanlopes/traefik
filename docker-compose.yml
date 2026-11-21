@@ -3,6 +3,12 @@ version: "3.8"
 services:
   socket_proxy:
     image: tecnativa/docker-socket-proxy@sha256:fd989c12c74edb8424f53f31a2054459f286967c93e113e91ea95432f066493b
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:2375/_ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
     environment:
       # Permissões mínimas para o Traefik
       CONTAINERS: 1
@@ -30,6 +36,12 @@ services:
 
   traefik:
     image: traefik:latest@sha256:b7b1b31e6440de0b1f7c4e0f6cf0a0f3f004866761d30c025fe00c80daaf7d9c
+    healthcheck:
+      test: ["CMD", "traefik", "healthcheck", "--configFile=/etc/traefik/traefik.yml"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
     command: ["--configFile=/etc/traefik/traefik.yml"]
     environment:
       CF_DNS_API_TOKEN_FILE: /run/secrets/cloudflare_api_token

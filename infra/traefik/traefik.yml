@@ -1,4 +1,7 @@
 entryPoints:
+  healthcheck:
+    address: "127.0.0.1:8082"
+
   websecure:
     address: ":443"
     http:
@@ -33,6 +36,9 @@ entryPoints:
 
   dns_udp:
     address: "192.168.10.91:53/udp"
+
+ping:
+  entryPoint: healthcheck
 
 providers:
   swarm:
