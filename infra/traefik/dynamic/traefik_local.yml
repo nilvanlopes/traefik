@@ -55,7 +55,7 @@ http:
     traefik-local-meu-site:
       entryPoints:
         - traefik_local
-      rule: "Host(`meu-site.localnetwork`) || Host(`mysite.localnetwork`)"
+      rule: "Host(`meusite.localnetwork`) || Host(`meu-site.localnetwork`) || Host(`mysite.localnetwork`)"
       middlewares:
         - traefik-local-lan-only
         - crowdsec@file
@@ -85,7 +85,7 @@ http:
     traefik-local-meu-site:
       loadBalancer:
         servers:
-          - url: "http://meu-site-dev:5173"
+          - url: "http://meu-site-dev_web:5173"
 
 tcp:
   routers:
