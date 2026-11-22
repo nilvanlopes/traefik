@@ -1,0 +1,36 @@
+# Sessions and per-player authorization are validated by the Fred API.
+http:
+  routers:
+    fred-portal:
+      entryPoints: [websecure]
+      rule: Host(`fred.nilvanlopes.com`)
+      priority: 10
+      middlewares: [crowdsec@file]
+      service: fred-web
+      tls:
+        certResolver: cloudflare
+    fred-session:
+      entryPoints: [websecure]
+      rule: Host(`fred.nilvanlopes.com`) && PathPrefix(`/outpost.goauthentik.io/`)
+      priority: 200
+      middlewares: [crowdsec@file]
+      service: fred-outpost
+      tls:
+        certResolver: cloudflare
+    fred-login:
+      entryPoints: [websecure]
+      rule: Host(`login-fred.nilvanlopes.com`)
+      priority: 150
+      middlewares: [crowdsec@file, authentik-headers@swarm]
+      service: authentik@swarm
+      tls:
+        certResolver: cloudflare
+  services:
+    fred-web:
+      loadBalancer:
+        servers:
+          - url: http://fred_web:8080
+    fred-outpost:
+      loadBalancer:
+        servers:
+          - url: http://authentik-outpost-fred_proxy:9000
